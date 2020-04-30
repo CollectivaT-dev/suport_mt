@@ -1,1 +1,2 @@
-# suport_mt
+# SuportMuTu
+Telegram bot for administering collective translations.

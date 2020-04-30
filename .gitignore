@@ -1,0 +1,8 @@
+*.mp3
+*.json
+*.yml
+*.yaml
+*.pyc
+*.swp
+__pycache__/
+venv/
