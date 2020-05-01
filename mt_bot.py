@@ -8,7 +8,7 @@ from utils import *
 from tasks_db import *
 from ops_messages import *
 
-CONFIG = yaml.load(open('test.yml'), Loader=yaml.BaseLoader)
+CONFIG = yaml.load(open('config.yml'), Loader=yaml.BaseLoader)
 #target_languages = ['es', 'ar', 'test']
 target_languages = ['test'] # also collection names
 
@@ -317,7 +317,7 @@ def command_confirm(message):
     
     #check if poster has a task due, if not don't do anything
     found_submissions = [t for t in \
-                     dbs['test'].get_nontranslated_submitted_tasks('gullabi')]
+                        dbs['test'].get_nontranslated_submitted_tasks(poster)]
 
     if found_submissions:
         if len(found_submissions) > 1:
