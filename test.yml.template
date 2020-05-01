@@ -1,0 +1,6 @@
+'bot_token': <your bot token string>
+'translators_group_id': <your group id int>
+'tgt_channel_name': <target channel name string>
+'src_channel_name': <source channel name string>
+'target_lang': 'es'
+'source_lang': 'ca'
