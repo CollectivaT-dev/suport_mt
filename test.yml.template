@@ -1,6 +1,17 @@
-'bot_token': <your bot token string>
-'translators_group_id': <your group id int>
-'tgt_channel_name': <target channel name string>
-'src_channel_name': <source channel name string>
-'target_lang': 'es'
-'source_lang': 'ca'
+token: <your bot token string>
+groups:
+  <name of first translators group>:
+    id: <your group id int>
+    source language: ca
+    target language: es
+    db: test # if different than "source language"
+    source vs target channels:
+    - [<source channel name string 1>, <target channel name string 1>]
+    - [<source channel name string 2>, <target channel name string 2>]
+  <name of second translators group>:
+    id: -393348344
+    source language: ca
+    target language: ar
+    source vs target channels:
+    - [<source channel name string 1>, <target channel name string>]
+    - [<source channel name string 2>, <target channel name string>]
