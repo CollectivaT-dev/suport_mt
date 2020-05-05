@@ -10,7 +10,7 @@ from ops_messages import *
 
 CONFIG = yaml.load(open('config.yml'), Loader=yaml.BaseLoader)
 #target_languages = ['es', 'ar', 'test']
-target_languages = ['test'] # also collection names
+target_languages = ['test', 'ar'] # also collection names TODO take from yaml
 
 bot = telebot.TeleBot(CONFIG['bot_token'])
 dbs = {lang:TasksDB(collection_name=lang) for lang in target_languages}
@@ -73,7 +73,7 @@ def channel_listener(message):
         new_task['content_type'] = message.content_type
         with open('debug.json', 'w') as out:
             json.dump(new_task, out)
-        translation_task_id = dbs['test'].insert_task(new_task)
+        translation_task_id = dbs[CONFIG['target_lang']].insert_task(new_task)
 
         # TODO is saving request task really necessary?
         request_text = REQUEST_TEXT%(
@@ -90,7 +90,7 @@ def channel_listener(message):
 
         # save the message id of the request message in translators group
         new_task['request_message_id'] = request_message.json['message_id']
-        dbs['test'].update_task(new_task)
+        dbs[CONFIG['target_lang']].update_task(new_task)
 
 @bot.message_handler(commands=['take'])
 def command_take(message):
@@ -103,7 +103,7 @@ def command_take(message):
         return #None?
 
     # check if the user has a task assigned
-    found_task = dbs['test'].get_nontranslated_of_user(requester_username)
+    found_task = dbs[CONFIG['target_lang']].get_nontranslated_of_user(requester_username)
     if found_task:
         bot.send_message(chat_id=CONFIG['translators_group_id'],
                          text="You can take only one task at a time. "\
@@ -131,7 +131,7 @@ def command_take(message):
             # TODO text from text list 
     if id_message_to_translate:
         # TODO call db from target_language
-        found_task = dbs['test'].get(id_message_to_translate)
+        found_task = dbs[CONFIG['target_lang']].get(id_message_to_translate)
         if found_task:
             # found task could already been translated
             # but in this case it would say it is assigned to someone
@@ -153,7 +153,7 @@ def command_take(message):
             else:
                 # message does not have a translator
                 user_taken_task = None
-                for active_task in dbs['test'].get_active_tasks():
+                for active_task in dbs[CONFIG['target_lang']].get_active_tasks():
                     # check if user has another task
                     if active_task['task_taker'] == requester_username:
                         user_taken_task_id = active_task['_id']
@@ -168,10 +168,10 @@ def command_take(message):
                     # TODO text from text list
                 else:
                     # Give translation task to user
-                    task = dbs['test'].get(id_message_to_translate)
+                    task = dbs[CONFIG['target_lang']].get(id_message_to_translate)
                     # TODO db key from lang
                     task['task_taker'] = requester_username
-                    dbs['test'].update_task(task)
+                    dbs[CONFIG['target_lang']].update_task(task)
                     # TODO db key from lang
                     bot.send_message(chat_id=CONFIG['translators_group_id'],
                                      text="Task %i granted to %s.\nNext "\
@@ -182,7 +182,7 @@ def command_take(message):
                     # TODO text from text list
         else:
             # if task not found
-            nontaken_tasks = [t for t in dbs['test'].get_passive_tasks()]
+            nontaken_tasks = [t for t in dbs[CONFIG['target_lang']].get_passive_tasks()]
             if len(nontaken_tasks) == 0:
                 bot.send_message(chat_id=CONFIG['translators_group_id'],
                                  text="There are currently no active tasks.")
@@ -202,7 +202,7 @@ def get_poster_name(message):
 @bot.message_handler(commands=['task', 'tasks'])
 def command_tasks(message):
     # Shows a list of tasks to the user
-    active_tasks = [t for t in dbs['test'].get_nontranslated_tasks()]
+    active_tasks = [t for t in dbs[CONFIG['target_lang']].get_nontranslated_tasks()]
     # TODO call db from source language
     if active_tasks:
         out_message = "%i active tasks with IDs:\n"%len(active_tasks)
@@ -239,10 +239,10 @@ def command_drop(message):
                          text=MSG_USERNAME_NOT_SET)
         return None
 
-    found_task = dbs['test'].get_nontranslated_of_user(requester_username)
+    found_task = dbs[CONFIG['target_lang']].get_nontranslated_of_user(requester_username)
     if found_task:
         found_task['task_taker'] = None
-        dbs['test'].update_task(found_task)
+        dbs[CONFIG['target_lang']].update_task(found_task)
         # TODO db call from source language
         bot.send_message(chat_id=CONFIG['translators_group_id'],
                          text="%s has dropped task %i. To take this task type:"\
@@ -284,7 +284,7 @@ def command_goto(message):
     
     if id_message_to_translate:
         # check if id in db
-        found_task = dbs['test'].get(id_message_to_translate)
+        found_task = dbs[CONFIG['target_lang']].get(id_message_to_translate)
         # TODO db call from source language
         if found_task:
             reply_message = "Here's the message linked to task %i"\
@@ -317,7 +317,7 @@ def command_confirm(message):
     
     #check if poster has a task due, if not don't do anything
     found_submissions = [t for t in \
-                        dbs['test'].get_nontranslated_submitted_tasks(poster)]
+                        dbs[CONFIG['target_lang']].get_nontranslated_submitted_tasks(poster)]
 
     if found_submissions:
         if len(found_submissions) > 1:
@@ -360,7 +360,7 @@ def command_confirm(message):
         except:
             print("Message cannot be sent to TTS")
         found_task['translated'] = True
-        dbs['test'].update_task(found_task)
+        dbs[CONFIG['target_lang']].update_task(found_task)
         # TODO db call through source language
     else:
         bot.send_message(chat_id=CONFIG['translators_group_id'],
@@ -379,7 +379,7 @@ def task_submission_listener(message):
         return None
     
     # Check if poster has a task due, if not don't do anything
-    found_task = dbs['test'].get_nontranslated_of_user(poster)
+    found_task = dbs[CONFIG['target_lang']].get_nontranslated_of_user(poster)
     # TODO db call through source language
     if found_task:
         if not re.match(TRANSLATION_HEADER_REGEX, message.text):
@@ -393,7 +393,7 @@ def task_submission_listener(message):
         else:
             # take submission and ask for confirmation if everything is ok
             found_task['submission'] = message.json
-            dbs['test'].update_task(found_task)
+            dbs[CONFIG['target_lang']].update_task(found_task)
             # TODO db call through source language
             bot.send_message(chat_id=CONFIG['translators_group_id'],
                              text="Translation for task %i submitted by %s. "\
