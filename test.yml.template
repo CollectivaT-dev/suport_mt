@@ -9,7 +9,7 @@ groups:
     - [<source channel name string 1>, <target channel name string 1>]
     - [<source channel name string 2>, <target channel name string 2>]
   <name of second translators group>:
-    id: -393348344
+    id: <another group id int>
     source language: ca
     target language: ar
     source vs target channels:
