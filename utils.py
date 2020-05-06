@@ -1,6 +1,6 @@
 import re
 from googletrans import Translator
-from ops_messages import TRANSLATION_HEADER_REGEX
+from ops_messages import translation_header
 
 rich_emoji_pattern = re.compile("["
                 u"\U0001F600-\U0001F64F"  # emoticons
@@ -22,8 +22,10 @@ rich_emoji_pattern = re.compile("["
     "]+|:[\S+]+:|\n+", flags=re.UNICODE)
 mt_translator = Translator()
 
-def emoji_header_clean(message):
-    clean_message = TRANSLATION_HEADER_REGEX.sub(r'', message)
+def emoji_header_clean(message, target_lang):
+    header = (translation_header.get(target_lang) or\
+              translation_header['en'])
+    clean_message = header['regex'].sub(r'', message)
     clean_message = rich_emoji_pattern.sub(r'', clean_message)
     return clean_message
 

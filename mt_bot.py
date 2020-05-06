@@ -16,7 +16,6 @@ groups = config.config['groups']
 @bot.message_handler(commands=['help'])
 def command_help(message):
     # Prints help
-    # TODO print text according to language
     if message.chat.title not in config.config['groups'].keys():
         out_message = "WARNING: Group not yet added to the bot's own list"\
                       ".\n%s"%HELP_TEXT
@@ -32,20 +31,16 @@ def channel_listener(message):
 
     if source_channel not in config.source_channels:
         print('%s not in %s'%(source_channel, config.source_channels.keys()))
-        #TODO log "channel not in config list"
         return None
 
     for translator_group in \
                   config.source_channels[source_channel]['translator groups']:
         # Get translator group specific values
-        target_channel = [target \
-        for source, target in groups[translator_group]['source vs target channels']
-        if source == source_channel][0]
-        source_lang = groups[translator_group]['source language']
-        target_lang = groups[translator_group]['target language']
-        translators_group_id = groups[translator_group]['id']
-        collection = (groups[translator_group].get('db') or \
-                      groups[translator_group]['target language'])
+        target_channel = [target for source, target in \
+                         groups[translator_group]['source vs target channels']
+                         if source == source_channel][0]
+        translators_group_id, collection, (source_lang, target_lang) = \
+                                            get_group_values(translator_group)
 
         # Check if message has text
         message_with_text = False
@@ -85,8 +80,9 @@ def channel_listener(message):
             except:
                 # TODO from ops_messages
                 message_tr = "(ERROR: Couldn't send message to machine translation)"
-            # TODO translation header with language key
-            mt_message_text = TRANSLATION_HEADER%(message.chat.title,
+            header = (translation_header.get(target_lang) or\
+                      translation_header['en'])
+            mt_message_text = header['default']%(message.chat.title,
                                            source_channel, message_tr)
 
             new_task['task_taker'] = None
@@ -124,7 +120,8 @@ def command_take(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, source_target = \
+                                            get_group_values(translator_group)
 
     # Check if poster set username
     id_message_to_translate = None
@@ -162,7 +159,6 @@ def command_take(message):
                                   "task you want to take. e.g. /take 5")
             # TODO text from text list 
     if id_message_to_translate:
-        # TODO call db from target_language
         found_task = dbs[collection].get(id_message_to_translate)
         if found_task:
             # found task could already been translated
@@ -201,10 +197,8 @@ def command_take(message):
                 else:
                     # Give translation task to user
                     task = dbs[collection].get(id_message_to_translate)
-                    # TODO db key from lang
                     task['task_taker'] = requester_username
                     dbs[collection].update_task(task)
-                    # TODO db key from lang
                     bot.send_message(chat_id=translators_group_id,
                                      text="Task %i granted to %s.\nNext "\
                                           "message posted by them will "\
@@ -235,7 +229,10 @@ def get_group_values(translator_group):
     translators_group_id = groups[translator_group]['id']
     collection = (groups[translator_group].get('db') or \
                   groups[translator_group]['target language'])
-    return translators_group_id, collection
+    source_lang = groups[translator_group]['source language']
+    target_lang = groups[translator_group]['target language']
+
+    return translators_group_id, collection, (source_lang, target_lang)
 
 @bot.message_handler(commands=['task', 'tasks'])
 def command_tasks(message):
@@ -249,10 +246,11 @@ def command_tasks(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, source_target =\
+                                            get_group_values(translator_group)
+
 
     active_tasks = [t for t in dbs[collection].get_nontranslated_tasks()]
-    # TODO call db from source language
     if active_tasks:
         out_message = "%i active tasks with IDs:\n"%len(active_tasks)
         for i, active_task in enumerate(active_tasks):
@@ -290,7 +288,9 @@ def command_drop(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, source_target =\
+                                            get_group_values(translator_group)
+
 
     requester_username = get_poster_name(message)
     if not requester_username:
@@ -302,7 +302,6 @@ def command_drop(message):
     if found_task:
         found_task['task_taker'] = None
         dbs[collection].update_task(found_task)
-        # TODO db call from source language
         bot.send_message(chat_id=translators_group_id,
                          text="%s has dropped task %i. To take this task type:"\
                               " /take %i"%(requester_username,
@@ -323,7 +322,8 @@ def command_goto(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, source_target =\
+                                            get_group_values(translator_group)
 
     # Check if username is set
     id_message_to_translate = None
@@ -356,7 +356,6 @@ def command_goto(message):
     if id_message_to_translate:
         # check if id in db
         found_task = dbs[collection].get(id_message_to_translate)
-        # TODO db call from source language
         if found_task:
             reply_message = "Here's the message linked to task %i"\
                             ""%id_message_to_translate
@@ -389,7 +388,8 @@ def command_confirm(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, (source_lang, target_lang) =\
+                                            get_group_values(translator_group)
     tts_lang = (groups[translator_group].get('tts language') or\
                 groups[translator_group]['target language'])
 
@@ -405,9 +405,9 @@ def command_confirm(message):
 
     if found_submissions:
         if len(found_submissions) > 1:
-            # TODO smt 
-            print('ERROR multiple submissions found')
-            #return None
+            # TODO logging
+            print('WARNING multiple submissions found')
+
         found_task = found_submissions[0]
         # send submission to channel
         try:
@@ -435,8 +435,7 @@ def command_confirm(message):
         
         #Send audio
         msg_to_tts = emoji_header_clean(\
-                           found_task['submission']['text'])
-        # TODO add language to emoji clean
+                            found_task['submission']['text'], target_lang)
 
         try:
             myobj = gTTS(text=msg_to_tts, lang=tts_lang)
@@ -447,7 +446,6 @@ def command_confirm(message):
             print("Message cannot be sent to TTS")
         found_task['translated'] = True
         dbs[collection].update_task(found_task)
-        # TODO db call through source language
     else:
         bot.send_message(chat_id=translators_group_id,
                          text="You (%s) haven't submitted any translation "\
@@ -463,7 +461,10 @@ def task_submission_listener(message):
 
     # Get group specific values
     translator_group = message.chat.title
-    translators_group_id, collection = get_group_values(translator_group)
+    translators_group_id, collection, (source_lang, target_lang) =\
+                                            get_group_values(translator_group)
+    header = (translation_header.get(target_lang) or\
+              translation_header['en'])
 
     poster = get_poster_name(message)
     if not poster:
@@ -473,22 +474,19 @@ def task_submission_listener(message):
     
     # Check if poster has a task due, if not don't do anything
     found_task = dbs[collection].get_nontranslated_of_user(poster)
-    # TODO db call through source language
     if found_task:
-        if not re.match(TRANSLATION_HEADER_REGEX, message.text):
-            # TODO translation header lang dependent
+        if not re.match(header['regex'], message.text):
             # if the header message is not put warn the task taker
             bot.send_message(chat_id=translators_group_id,
                              text="Task submission rejected. It doesn't "\
                                   "include the translation header:\n" + \
-                                  TRANSLATION_HEADER_SIMPLE%(\
+                                  header['simple']%(\
                           found_task['task_originalmessage']['chat']['title'],
                       found_task['task_originalmessage']['chat']['username']))
         else:
             # take submission and ask for confirmation if everything is ok
             found_task['submission'] = message.json
             dbs[collection].update_task(found_task)
-            # TODO db call through source language
             bot.send_message(chat_id=translators_group_id,
                              text="Translation for task %i submitted by %s. "\
                                   "In order to confirm your translation, type"\

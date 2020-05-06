@@ -1,15 +1,18 @@
 import re
 
-#Strings in target language
-TRANSLATION_HEADER = "This is a translated message from the channel %s (t.me/%s).\n\n%s"
-TRANSLATION_HEADER_SIMPLE = "This is a translated message from the channel %s (t.me/%s)."
-TRANSLATION_HEADER_REGEX = re.compile("^This is a translated message from the channel .+ \(.+\).\n.*") #To check if it's placed well on submissions
-'''
-#Strings in target language
-TRANSLATION_HEADER = "هذه رسالة مترجمة من قناة" + " %s (t.me/%s) \n\n%s"
-TRANSLATION_HEADER_SIMPLE = "هذه رسالة مترجمة من قناة" + " %s (t.me/%s)"
-TRANSLATION_HEADER_REGEX = re.compile("^" + "هذه رسالة مترجمة من قناة" + " .+ \(.+\).\n.*") #To check if it's placed well on submissions
-'''
+# Header strings and operations in multiple languages
+
+translation_header = {"en":{
+"default": "This is a translated message from the channel %s (t.me/%s).\n\n%s",
+"simple": "This is a translated message from the channel %s (t.me/%s).",
+"regex": re.compile("^This is a translated message from the channel .+ \(.+\).\n.*")
+},
+                       "ar":{
+"default": "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " %s (t.me/%s) \n\n%s",
+"simple": "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " %s (t.me/%s)",
+"regex": re.compile("^" + "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " .+ \(.+\).\n.*")
+}
+                     }
 
 #English strings (TODO: Carry the rest here)
 MSG_USERNAME_NOT_SET = "SuportMT requires that you have a unique username to take translation tasks. Please set your username from your Telegram settings."
