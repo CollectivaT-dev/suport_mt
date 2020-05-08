@@ -1,6 +1,6 @@
 import yaml
 
-config = yaml.load(open('test.yml'), Loader=yaml.BaseLoader)
+config = yaml.load(open('config.yml'), Loader=yaml.BaseLoader)
 
 # list of db collections which should exist
 collections = [(group.get('db') or group['target language']) \

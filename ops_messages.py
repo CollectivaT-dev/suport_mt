@@ -7,10 +7,15 @@ translation_header = {"en":{
 "simple": "This is a translated message from the channel %s (t.me/%s).",
 "regex": re.compile("^This is a translated message from the channel .+ \(.+\).\n.*")
 },
-                       "ar":{
+                      "ar":{
 "default": "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " %s (t.me/%s) \n\n%s",
 "simple": "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " %s (t.me/%s)",
 "regex": re.compile("^" + "ﻩﺬﻫ ﺮﺳﺎﻟﺓ ﻢﺗﺮﺠﻣﺓ ﻢﻧ ﻖﻧﺍﺓ" + " .+ \(.+\).\n.*")
+},
+                      "zh-CN":{
+"default": "该信息翻译自" + " %s (t.me/%s) "+ "的信息\n\n%s",
+"simple": "该信息翻译自" + " %s (t.me/%s) "+ "的信息",
+"regex": re.compile("^"+"该信息翻译自 .+ \(.+\) 的信息\n")
 }
                      }
 
