@@ -1,5 +1,6 @@
 *.mp3
 *.json
+*.tar.gz
 *.yml
 *.yaml
 *.pyc
