@@ -2,6 +2,7 @@
 *.json
 *.tar.gz
 *.yml
+*.csv
 *.yaml
 *.pyc
 *.swp

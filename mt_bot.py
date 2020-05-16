@@ -77,6 +77,7 @@ def channel_listener(message):
                 message_tr = translate_message(message_text_content,
                                                target_lang=target_lang,
                                                source_lang=source_lang)
+                new_task['mt_message'] = message_tr
             except:
                 # TODO from ops_messages
                 message_tr = "(ERROR: Couldn't send message to machine translation)"
