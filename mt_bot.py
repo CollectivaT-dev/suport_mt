@@ -12,6 +12,7 @@ from ops_messages import *
 bot = telebot.TeleBot(config.config['token'])
 dbs = {lang:TasksDB(collection_name=lang) for lang in config.collections}
 groups = config.config['groups']
+admins = config.config['admins']
 
 @bot.message_handler(commands=['help'])
 def command_help(message):
@@ -476,7 +477,12 @@ def command_cancel(message):
         bot.send_message(chat_id=translators_group_id,
                          text=MSG_USERNAME_NOT_SET)
         return None
-    
+
+    # Only admins can use the command
+    if requester_username not in admins:
+        print('non admin')
+        return None
+
     # parse the task id
     parameters = message.text.split(" ")[1:]
     if len(parameters) == 0:
@@ -550,6 +556,11 @@ def command_cancel(message):
     if not requester_username:
         bot.send_message(chat_id=translators_group_id,
                          text=MSG_USERNAME_NOT_SET)
+        return None
+
+    # Only admins can use the command
+    if requester_username not in admins:
+        print('non admin')
         return None
     
     # parse the task id
