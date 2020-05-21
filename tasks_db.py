@@ -13,6 +13,8 @@ class TasksDB(object):
         self.collection_name = collection_name
         self.q_nontranslated = {'$or': [{'translated': False},
                                         {'translated': {'$exists': False}}]}
+        self.q_noncancelled = {'$or': [{'cancelled': {'$exists': False}},
+                                       {'cancelled': False}]}
 
     def connect(self):
         # TODO check docker network connection
@@ -51,7 +53,8 @@ class TasksDB(object):
 
     def get_nontranslated(self, task_id):
         ref = self.collection.find_one({"$and":[{"_id": task_id},
-                                                self.q_nontranslated]})
+                                                self.q_nontranslated,
+                                                self.q_noncancelled]})
         if ref:
             return ref
         else:
@@ -59,6 +62,7 @@ class TasksDB(object):
 
     def get_nontranslated_of_user(self, username):
         ref = self.collection.find_one({"$and":[self.q_nontranslated,
+                                                self.q_noncancelled,
                                                 {"task_taker": username}]})
         if ref:
             return ref
@@ -67,21 +71,24 @@ class TasksDB(object):
 
     def get_active_tasks(self):
         ref = self.collection.find({"$and": [{"task_taker":{'$ne':None}},
-                                             self.q_nontranslated]})
+                                             self.q_nontranslated,
+                                             self.q_noncancelled]})
         return ref
 
     def get_passive_tasks(self):
         ref = self.collection.find({"$and":[self.q_nontranslated,
+                                            self.q_noncancelled,
                                             {"task_taker":None}]})
         return ref
 
     def get_nontranslated_tasks(self):
-        ref = self.collection.find({"$or":[self.q_nontranslated,
-                                         {"translated": {"$exists": False}}]})
+        ref = self.collection.find({"$and":[self.q_nontranslated,
+                                            self.q_noncancelled]})
         return ref
 
     def get_nontranslated_submitted_tasks(self, username):
         ref = self.collection.find({"$and":[self.q_nontranslated,
+                                            self.q_noncancelled,
                                             {"task_taker": username},
                                             {"submission": {"$exists":True}}]})
         return ref 

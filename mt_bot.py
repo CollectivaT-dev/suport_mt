@@ -162,6 +162,7 @@ def command_take(message):
     if id_message_to_translate:
         found_task = dbs[collection].get(id_message_to_translate)
         if found_task:
+            # TODO check if task cancelled if so don't allow "take"
             # found task could already been translated
             # but in this case it would say it is assigned to someone
             # since only nontranslated tasks can be dropped 
@@ -351,7 +352,7 @@ def command_goto(message):
         except:
             bot.send_message(chat_id=translators_group_id,
                              text="Bad task ID. Please include ID of the task"\
-                                  " you want to see. e.g. /take 5")
+                                  " you want to see. e.g. /goto 5")
             # TODO text from text list
     
     if id_message_to_translate:
@@ -453,6 +454,149 @@ def command_confirm(message):
                               "to confirm."%(poster))
         # TODO text from text list
 
+@bot.message_handler(commands=['cancel'])
+def command_cancel(message):
+    # Remove the task from the task list
+
+    if message.chat.title not in config.config['groups'].keys():
+        out_message = "ERROR: Group not added to the bot's own list"\
+                      ".\n%s"%HELP_TEXT
+        bot.send_message(chat_id=message.chat.id, text=out_message)
+        return None
+
+    # Get group specific values
+    translator_group = message.chat.title
+    translators_group_id, collection, (source_lang, target_lang) =\
+                                            get_group_values(translator_group)
+
+    # Check if username is set
+    id_message_to_cancel = None
+    requester_username = get_poster_name(message)
+    if not requester_username:
+        bot.send_message(chat_id=translators_group_id,
+                         text=MSG_USERNAME_NOT_SET)
+        return None
+    
+    # parse the task id
+    parameters = message.text.split(" ")[1:]
+    if len(parameters) == 0:
+        bot.send_message(chat_id=translators_group_id,
+                         text="Please include ID of the task you want to cancel."\
+                              " e.g. /cancel 5")
+        # TODO text from text list
+    elif len(parameters) > 1:
+        bot.send_message(chat_id=translators_group_id,
+                         text="You can request one task to cancel. e.g. /cancel 5")
+        # TODO text from text list
+    elif len(parameters) == 1:
+        try:
+            id_message_to_cancel = int(parameters[0])
+        except:
+            bot.send_message(chat_id=translators_group_id,
+                             text="Bad task ID. Please include ID of the task"\
+                                  " you want to cancel. e.g. /cancel 5")
+            # TODO text from text list
+
+    if id_message_to_cancel:
+        found_task = dbs[collection].get(id_message_to_cancel)
+        if found_task:
+            # found task could already been translated
+            # but in this case it would say it cannot be cancelled
+            # since only nontranslated tasks can be cancelled
+            translated = found_task.get('translated')
+            if translated:
+                bot.send_message(chat_id=translators_group_id,
+                                 text="Task %i is already translated, cannot "\
+                                      "be cancelled."%id_message_to_cancel)
+            else:
+                # TODO check if it is already cancelled
+                found_task['cancelled'] = True
+                # in order not to have conflicts if the task is activated later
+                # also cancel the task taker assignment
+                found_task['task_taker'] = None
+                dbs[collection].update_task(found_task)
+                bot.send_message(chat_id=translators_group_id,
+                                 text="Task %i cancelled. It will not "\
+                                      "show up in the tasks list.\n"\
+                                      "In order to revert the status use "\
+                                      "/activate %i"%(id_message_to_cancel,
+                                                      id_message_to_cancel))
+                # TODO text from text list
+        else:
+            # if task not found
+            bot.send_message(chat_id=translators_group_id,
+                             text="No task found with ID %i."\
+                                  ""%(id_message_to_cancel))
+            #TODO text from text list
+
+@bot.message_handler(commands=['activate'])
+def command_cancel(message):
+    # Remove the task from the task list
+
+    if message.chat.title not in config.config['groups'].keys():
+        out_message = "ERROR: Group not added to the bot's own list"\
+                      ".\n%s"%HELP_TEXT
+        bot.send_message(chat_id=message.chat.id, text=out_message)
+        return None
+
+    # Get group specific values
+    translator_group = message.chat.title
+    translators_group_id, collection, (source_lang, target_lang) =\
+                                            get_group_values(translator_group)
+
+    # Check if username is set
+    id_message_to_activate = None
+    requester_username = get_poster_name(message)
+    if not requester_username:
+        bot.send_message(chat_id=translators_group_id,
+                         text=MSG_USERNAME_NOT_SET)
+        return None
+    
+    # parse the task id
+    parameters = message.text.split(" ")[1:]
+    if len(parameters) == 0:
+        bot.send_message(chat_id=translators_group_id,
+                         text="Please include ID of the task you want to activate."\
+                              " e.g. /activate 5")
+        # TODO text from text list
+    elif len(parameters) > 1:
+        bot.send_message(chat_id=translators_group_id,
+                         text="You can request one task to activate. e.g. /activate 5")
+        # TODO text from text list
+    elif len(parameters) == 1:
+        try:
+            id_message_to_activate = int(parameters[0])
+        except:
+            bot.send_message(chat_id=translators_group_id,
+                             text="Bad task ID. Please include ID of the task"\
+                                  " you want to activate. e.g. /activate 5")
+            # TODO text from text list
+
+    if id_message_to_activate:
+        found_task = dbs[collection].get(id_message_to_activate)
+        if found_task:
+            # only cancelled tasks can be activated
+            cancelled = found_task.get('cancelled')
+            if not cancelled:
+                bot.send_message(chat_id=translators_group_id,
+                                 text="Task %i is not cancelled, hence cannot"\
+                                      " be activated."%id_message_to_activate)
+            else:
+                # TODO check if it is already cancelled
+                found_task['cancelled'] = False
+                dbs[collection].update_task(found_task)
+                bot.send_message(chat_id=translators_group_id,
+                                 text="Task %i activated. It will now "\
+                                      "show up in the tasks list."\
+                                      ""%(id_message_to_activate))
+                # TODO text from text list
+        else:
+            # if task not found
+            bot.send_message(chat_id=translators_group_id,
+                             text="No task found with ID %i."\
+                                  ""%(id_message_to_activate))
+            #TODO text from text list
+
 @bot.message_handler()
 def task_submission_listener(message):
     # Listen to the task submission
@@ -495,3 +639,5 @@ def task_submission_listener(message):
                                "override this submission."%(found_task["_id"],
                                                                poster))
             # TODO text from text list
+
+
