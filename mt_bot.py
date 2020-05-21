@@ -161,7 +161,7 @@ def command_take(message):
                                   "task you want to take. e.g. /take 5")
             # TODO text from text list 
     if id_message_to_translate:
-        found_task = dbs[collection].get(id_message_to_translate)
+        found_task = dbs[collection].get_nontranslated(id_message_to_translate)
         if found_task:
             # TODO check if task cancelled if so don't allow "take"
             # found task could already been translated
