@@ -1,3 +1,6 @@
 mongoexport -d suportmutu -c ar -q '{"translated":true}' --fields "_id,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o ar.csv
 mongoexport -d suportmutu -c ur -q '{"translated":true}' --fields "_id,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o ur.csv
 mongoexport -d suportmutu -c zh-CN -q '{"translated":true}' --fields "_id,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o zh.csv
+mongoexport -d suportmutu -c ar --fields "_id,translated,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o ar_all.csv
+mongoexport -d suportmutu -c ur --fields "_id,translated,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o ur_all.csv
+mongoexport -d suportmutu -c zh-CN --fields "_id,translated,task_taker,src_channel_name,tgt_channel_name,task_originalmessage.text,task_originalmessage.caption,submission.text" --type=csv -o zh_all.csv
