@@ -7,7 +7,7 @@ pyaml==20.4.0
 pymongo==4.6.3
 pyTelegramBotAPI==3.6.7
 PyYAML==5.4
-requests==2.32.2
+requests==2.32.4
 six==1.14.0
 soupsieve==2.0
 urllib3==1.26.19
